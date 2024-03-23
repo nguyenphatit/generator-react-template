@@ -69,13 +69,8 @@ export default class extends Generator {
     const projectName = this.options.appname ? this.options.appname.replace(/\s+/g, '-').toLowerCase() : this.answers.appname.replace(/\s+/g, '-').toLowerCase();
     
     this._handleExtension(projectName);
-    this._handleUiLibrary();
-
-    // this.fs.copyTpl(
-    //   this.templatePath('README.md'),
-    //   this.destinationPath('README.md'),
-    //   { description: 'My awesome app' }
-    // );
+    this._handleUiLibrary(projectName);
+    this._handleGlobalStateManagement(projectName);
   }
 
   _handleExtension(projectName) {
@@ -94,18 +89,86 @@ export default class extends Generator {
     }
   }
 
-  _handleUiLibrary() {
+  _handleUiLibrary(projectName) {
     switch (this.answers.uiLibrary) {
       case 'Tailwind CSS':
-        this._installTailwindCSS();
+        this._installTailwindCSS(projectName);
         break;
     
+      case 'MUI':
+        this._installMUI(projectName);
+        break;
+
       default:
         break;
     }
   }
 
-  _installTailwindCSS() {
+  _installTailwindCSS(projectName) {
+    this.devDependencies.push('tailwindcss');
+    
+    const packageJsonPath = this.destinationPath(projectName + '/package.json');
+    const packageJson = this.fs.readJSON(packageJsonPath) || {};
+
+    if (packageJson.devDependencies === undefined) {
+      packageJson.devDependencies = {};
+    }
+
+    packageJson.devDependencies['tailwindcss'] = '^3.0.0';
+
+    this.fs.writeJSON(packageJsonPath, packageJson, { force: true });
+    this.fs.delete(this.destinationPath(projectName + '/src/assets/styles/App.css'));
+    this.fs.delete(this.destinationPath(projectName + '/src/assets/styles/index.css'));
+    
+    this.fs.copyTpl(
+      this.templatePath('tailwindcss/index.css'),
+      this.destinationPath(projectName + '/src/assets/styles/index.css')
+    );
+
+    if (this.answers.extension) {
+      this.fs.delete(this.destinationPath(projectName + '/src/App.tsx'));
+      this.fs.copyTpl(
+        this.templatePath('tailwindcss/App.tsx'),
+        this.destinationPath(projectName + '/src/App.tsx')
+      );
+    } else {
+      this.fs.delete(this.destinationPath(projectName + '/src/App.jsx'));
+      this.fs.copyTpl(
+        this.templatePath('tailwindcss/App.jsx'),
+        this.destinationPath(projectName + '/src/App.jsx')
+      );
+    }
+    this.fs.copy(
+      this.templatePath('tailwindcss/tailwind.config.js'),
+      this.destinationPath(projectName + '/tailwind.config.js')
+    );
+  }
+
+  _installMUI(projectName) {
+    this.dependencies.push('@emotion/react', '@emotion/styled', '@fontsource/roboto', '@mui/icons-material', '@mui/material');
+
+    this.fs.delete(this.destinationPath(projectName + '/public/index.html'));
+    this.fs.copy(
+      this.templatePath('mui/index.html'),
+      this.destinationPath(projectName + '/public/index.html')
+    );
+
+    if (this.answers.extension) {
+      this.fs.delete(this.destinationPath(projectName + '/src/App.tsx'));
+      this.fs.copyTpl(
+        this.templatePath('mui/App.tsx'),
+        this.destinationPath(projectName + '/src/App.tsx')
+      );
+    } else {
+      this.fs.delete(this.destinationPath(projectName + '/src/App.jsx'));
+      this.fs.copyTpl(
+        this.templatePath('mui/App.jsx'),
+        this.destinationPath(projectName + '/src/App.jsx')
+      );
+    }
+  }
+
+  _handleGlobalStateManagement(projectName) {
     
   }
 };
