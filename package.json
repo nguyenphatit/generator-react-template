@@ -1,0 +1,17 @@
+{
+  "name": "generator-react-template",
+  "version": "1.0.0",
+  "description": "",
+  "files": [
+    "generators"
+  ],
+  "keywords": [
+    "yeoman-generator"
+  ],
+  "type": "module",
+  "author": "Phat",
+  "license": "ISC",
+  "dependencies": {
+    "yeoman-generator": "^7.1.1"
+  }
+}
